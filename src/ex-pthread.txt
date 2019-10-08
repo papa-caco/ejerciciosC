@@ -1,0 +1,58 @@
+/*
+ * ex-pthread.c
+ *
+ *  Created on: 4 oct. 2019
+ *      Author: utnso
+ */
+#define _GNU_SOURCE
+#include <unistd.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <pthread.h>
+
+void recursiva(int cant) {
+    if(cant > 0) recursiva(cant - 1);
+}
+
+void test1() {
+	pthread_t tid1;
+    int i;
+
+    for (i = 0; i < 30; i++) {
+        tid1 = pthread_self();
+        printf("Soy el ult %lu mostrando el numero %d \n", tid1, i);
+        usleep(5000 * i * tid1); /* Randomizes the sleep, so it gets larger after a few iterations */
+
+        recursiva(i);
+
+        // Round Robin will yield the CPU
+        if((i+tid1)%5 == 0) pthread_yield();
+    }
+}
+
+void test2() {
+    int i;
+    pthread_t tid2;
+
+    for (i = 0; i < 10; i++) {
+        tid2 = pthread_self();
+        printf("Soy el ult %lu mostrando el numero %d \n", tid2, i);
+        usleep(2000 * i * tid2); /* Randomizes the sleep, so it gets larger after a few iterations */
+        recursiva(i);
+    }
+}
+
+/* Main program */
+int main(void) {
+	pthread_t tid1;
+	pthread_t tid2;
+    int i;
+
+    //lib_init();
+    for(i=0; i < 20; i++) {
+        pthread_create(&tid1,NULL,test1,NULL);
+        pthread_create(&tid2,NULL,test2,NULL);
+    }
+    exit(0);
+}
+
